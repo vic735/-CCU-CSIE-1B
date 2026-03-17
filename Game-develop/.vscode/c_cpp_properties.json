@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/raylib/raylib/src/**" // 告訴 VS Code 去這裡找 raylib.h
+            ],
+            "compilerPath": "C:/raylib/w64devkit/bin/g++.exe", // 指定編譯器的位置
+            "cStandard": "c99",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}
