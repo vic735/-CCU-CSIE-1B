@@ -1,3 +1,5 @@
+<img src="images/A.png" alt="" width="400">
+接放
 我的專屬電子雞 (Virtual Pet)
 
 ​文化大學 資工 1B - 物件導向程式設計 (OOP) 期末小專題
