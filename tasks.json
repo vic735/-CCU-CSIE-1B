@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "編譯 Raylib 遊戲", // 這是你等一下在選單裡會看到的任務名稱
+            "type": "process",
+            "command": "C:/raylib/w64devkit/bin/g++.exe", // 使用我們剛安裝的編譯器
+            "args": [
+                "${workspaceFolder}\\*.cpp", // 編譯你目前開啟的 C++ 檔案 (例如 main.cpp)
+                "-o",
+                "${fileDirname}\\game.exe", // 輸出的執行檔名稱叫做 game.exe
+                "-O1",
+                "-Wall",
+                "-std=c++17",
+                // --- 以下是關鍵的「連結」指令 ---
+                "-I", "C:/raylib/raylib/src", // 告訴編譯器標頭檔在哪
+                "-L", "C:/raylib/raylib/src", // 告訴編譯器函式庫檔在哪
+                "-lraylib",   // 連結 Raylib 核心
+                "-lopengl32", // 連結 Windows 的圖形渲染底層
+                "-lgdi32",    // 連結 Windows 的視窗繪圖底層
+                "-lwinmm"     // 連結 Windows 的多媒體音效底層
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true // 設定為預設的建置任務
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}
