@@ -3,6 +3,12 @@
 #include "GameWindow.h"
 #include "raymath.h"
 
+// 🌐 為了串接雲端 API，補上這三行
+#define CPPHTTPLIB_OPENSSL_SUPPORT // 如果未來要支援 https 再開，目前一般 http 可不加
+#include "httplib.h"
+#pragma comment(lib, "ws2_32.lib")  // 👈 Windows 專用：強制連結作業系統的網路庫
+#include <string>
+
 //視窗建構子實作
 GameWindow::GameWindow(int w,int h , const char* t){
     width = w;
@@ -12,9 +18,14 @@ GameWindow::GameWindow(int w,int h , const char* t){
     foodBtn ={20 , 20 , 100 , 40 };//按鈕位置
     renameBth = {130 , 20 , 100 , 40}; //名稱按鈕
 
+    currentState = STATE_NAMING; 
+    inputText = ""; 
+    hasUploaded = false;
+
     currentState = STATE_NAMING; //初始化命名畫面
     inputText = ""; //輸入文字，預設空白
     framesCounter = 0;
+    enemySpawnTimer = 0.0f; //初始化敵人生出計時器
 
 
     //初始化視窗
@@ -22,7 +33,7 @@ GameWindow::GameWindow(int w,int h , const char* t){
     SetTargetFPS(60); //固定幀數 應該吧
 
     //載入中文
-    const char* dictionary = u8"飼料寵物正在跟著你！是一隻，我叫做請為取個名字：按鍵確認Enter大雞雞波波改名輸入英文數飢餓度心情值"; 
+    const char* dictionary = u8"飼料寵物正在跟著你！是一隻，我叫做請為取個名字：按鍵確認Enter大雞雞波波改名輸入英文數飢餓度心情值存活時間秒血量遊戲結束重新開始最終今天天氣真好想散步你在看我嗎好吃我快不行了痛";
 
     int codepointCount = 0;
     int *codepoints = LoadCodepoints(dictionary, &codepointCount);
@@ -47,11 +58,12 @@ GameWindow::GameWindow(int w,int h , const char* t){
     UnloadCodepoints(codepoints);
 
     //載入寵物GameWindow.cpp
-    myPet = new VirtualPet("寵物名","pet.png",300,200);
+    myPet = new VirtualPet("寵物名","pet.png","pet_hurt.png",300,200);
 
     // 為什麼不在 .h 檔直接寫 `VirtualPet myPet;`？
     // 因為 Raylib 規定：【必須先 InitWindow 開啟顯示卡環境，才能 LoadTexture 載入圖片】。
     // 所以我們必須在這裡（視窗開好之後），才把寵物「生」出來。 by-AI
+    
 
 }
 
@@ -126,81 +138,192 @@ void GameWindow::Run(){
         DrawTextEx(chineseFont , u8"輸入英文,enter確認", Vector2{200 , 320 } , 24 , 2 , GRAY);
 
         EndDrawing();
-            }
-
+        }
 
         //遊戲畫面
-    else if (currentState == STATE_PLAYING ){
+        else if (currentState == STATE_PLAYING ){
 
-        Vector2 mousePos = GetMousePosition();
+            Vector2 mousePos = GetMousePosition();
 
-        //偵測是否有點飼料
-        if(CheckCollisionPointRec(mousePos , foodBtn)){
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-                isFoodActive = !isFoodActive; //切換飼料狀態
+            //偵測是否有點飼料
+            if(CheckCollisionPointRec(mousePos , foodBtn)){
+                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+                    isFoodActive = !isFoodActive; //切換飼料狀態
+                }
             }
-        }
-        
-        //偵測改名按鈕
-        if(CheckCollisionPointRec(mousePos , renameBth)){
-            if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-                currentState = STATE_NAMING; //切換回命名葉面
-                inputText = myPet -> GetName();
-                isFoodActive = false;
-            }
-        }
-
-        //強制改變動物目標位置
-        if(isFoodActive){
-            myPet -> SetTarget(Vector2{mousePos.x-50 , mousePos.y-50} , true);//稍微修正位置
-
-            float dist = Vector2Distance(Vector2{myPet -> GetX() + 50 , myPet -> GetY() + 50},mousePos);
-
-            //如果距離夠近 (小於40像素)，代表大雞雞碰到飼料了！ by AI
-            if(dist < 40.0f){
-                myPet -> Feed(); //呼叫餵食
-                isFoodActive = false; //手上的飼料被吃掉 狀態取消
-            }
-
-        }
-        else{
-            myPet -> SetTarget(mousePos,false);
-        }
-
-        //畫面渲染
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
-
-        //畫出寵物
-        myPet -> Draw();
-
-        //劃出數值
-        myPet -> GetStats()->DrawUI(30 , 480 , chineseFont);
-
-
-        // 邏輯更新
-        myPet -> Update(); //寵物呼叫狀態 指標呼叫原來是用-> 好酷喔
-
-        //繪製按鈕
-        DrawRectangleRec(foodBtn, isFoodActive ? GOLD : LIGHTGRAY); //按鈕顏色與狀態
-        DrawRectangleLinesEx(foodBtn , 2 , DARKGRAY);
-        DrawTextEx(chineseFont , u8"飼料", Vector2{ foodBtn.x + 15, foodBtn.y + 5 }, 24, 2, BLACK);
-
-        //繪製名稱按鈕
-        DrawRectangleRec(renameBth, LIGHTGRAY);
-        DrawRectangleLinesEx(renameBth, 2, DARKGRAY); 
-        DrawTextEx(chineseFont, u8"改名", Vector2{ renameBth.x + 15, renameBth.y + 5 }, 24, 2, BLACK);
-
-
-        //在滑鼠位置繪製一顆飼料
-        if (isFoodActive){
-            DrawCircleV(mousePos , 10 , ORANGE);
-            //DrawTextEx(chineseFont,u8"他跟著你", Vector2{150 , 25},24,2 ,DARKGRAY);
-
-        }
-
-        EndDrawing();
             
+            //偵測改名按鈕
+            if(CheckCollisionPointRec(mousePos , renameBth)){
+                if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+                    currentState = STATE_NAMING; //切換回命名葉面
+                    inputText = myPet -> GetName();
+                    isFoodActive = false;
+                }
+            }
+
+            //強制改變動物目標位置
+            if(isFoodActive){
+                myPet -> SetTarget(Vector2{mousePos.x-50 , mousePos.y-50} , true);//稍微修正位置
+
+                float dist = Vector2Distance(Vector2{myPet -> GetX() + 50 , myPet -> GetY() + 50},mousePos);
+
+                //如果距離夠近 (小於40像素)，代表大雞雞碰到飼料了！ by AI
+                if(dist < 40.0f){
+                    myPet -> Feed(); //呼叫餵食
+                    isFoodActive = false; //手上的飼料被吃掉 狀態取消
+                }
+
+            }
+            else{
+                myPet -> SetTarget(mousePos,false);
+            }
+
+            //敵人
+            enemySpawnTimer += GetFrameTime();
+            if (enemySpawnTimer > 1.5f) { // 每 1.5 秒隨機生出一隻
+                enemySpawnTimer = 0.0f;
+                Enemy newEnemy;
+                newEnemy.radius = 15.0f;
+                
+                int edge = GetRandomValue(0, 3); // 決定要在哪一邊生成 (0上 1右 2下 3左)
+                if (edge == 0) { 
+                    newEnemy.x = GetRandomValue(0, width); newEnemy.y = -50; 
+                    newEnemy.speedX = GetRandomValue(-3, 3); newEnemy.speedY = GetRandomValue(2, 6); 
+                } else if (edge == 1) { 
+                    newEnemy.x = width + 50; newEnemy.y = GetRandomValue(0, height); 
+                    newEnemy.speedX = GetRandomValue(-6, -2); newEnemy.speedY = GetRandomValue(-3, 3); 
+                } else if (edge == 2) { 
+                    newEnemy.x = GetRandomValue(0, width); newEnemy.y = height + 50; 
+                    newEnemy.speedX = GetRandomValue(-3, 3); newEnemy.speedY = GetRandomValue(-6, -2); 
+                } else { 
+                    newEnemy.x = -50; newEnemy.y = GetRandomValue(0, height); 
+                    newEnemy.speedX = GetRandomValue(2, 6); newEnemy.speedY = GetRandomValue(-3, 3); 
+                }
+                enemies.push_back(newEnemy); // 把這隻新敵人丟進陣列裡
+            }
+
+            // 敵人的移動與碰撞判定
+            for (auto it = enemies.begin(); it != enemies.end(); ) {
+                it->x += it->speedX;
+                it->y += it->speedY;
+
+                // 判斷是否飛出畫面外
+                bool hitBound = (it->x < -100 || it->x > width + 100 || it->y < -100 || it->y > height + 100);
+
+                // 計算寵物(中心點)與這隻敵人的距離
+                float dist = Vector2Distance(Vector2{myPet->GetX() + 50, myPet->GetY() + 50}, Vector2{it->x, it->y});
+                bool hitPet = (dist < it->radius + 40.0f); // 碰撞半徑
+
+                if (hitPet) {
+                    myPet->GetStats()->TakeDamage(20.0f); 
+                    myPet->Speak(u8"好痛！", 1.0f); // ⚠️ 撞到時發出哀嚎
+                }
+                
+
+                // 如果飛出界外，或是撞到寵物，就把這隻敵人從陣列中刪除
+                if (hitBound || hitPet) {
+                    it = enemies.erase(it); 
+                } else {
+                    ++it;
+                }
+            }
+
+            // 邏輯更新
+            myPet -> Update(); //寵物呼叫狀態 指標呼叫原來是用-> 好酷喔
+
+            //死亡判定
+                    if (myPet->GetStats()->GetHealth() <= 0) {
+                            currentState = STATE_GAMEOVER;
+
+                            if (!hasUploaded) {
+                    std::string playerName = myPet->GetName();
+                    int survivalSec = myPet->GetStats()->GetSurvivalTime();
+
+                    // 1. 連線到你的 GCP 雲端主機（請把這裡的 IP 換成你 GCP 的外部 IP）
+                    httplib::Client cli("http://你的GCP外部IP:8080");
+
+                    // 2. 把玩家名字與存活時間打包成簡單的 JSON 字串
+                    std::string jsonBody = "{\"player\": \"" + playerName + "\", \"score\": " + std::to_string(survivalSec) + "}";
+
+                    // 3. 發送 POST 請求給雲端
+                    // 使用 try-catch 或者是條件判斷，防止因為沒連網導致遊戲當掉
+                    if (auto res = cli.Post("/api/sync", jsonBody, "application/json")) {
+                        if (res->status == 200) {
+                            std::cout << "雲端排行同步成功！" << std::endl;
+                        }
+                    } else {
+                        std::cout << "目前處於離線狀態，無法連接到雲端伺服器。" << std::endl;
+                    }
+
+                    hasUploaded = true; // 鎖上開關，這一局不再重複上傳！
+                }
+            }
+
+            //畫面渲染
+            BeginDrawing();
+            ClearBackground(RAYWHITE);
+
+            // 畫出所有敵人 (紫色的圓球)
+            for (const auto& enemy : enemies) {
+                DrawCircleV(Vector2{enemy.x, enemy.y}, enemy.radius, PURPLE);
+            }
+             //畫出寵物
+            myPet -> Draw(chineseFont);
+
+            //劃出數值
+
+            myPet -> GetStats()->DrawUI(30 , 480 , chineseFont);
+
+            //繪製按鈕
+            DrawRectangleRec(foodBtn, isFoodActive ? GOLD : LIGHTGRAY); //按鈕顏色與狀態
+            DrawRectangleLinesEx(foodBtn , 2 , DARKGRAY);
+            DrawTextEx(chineseFont , u8"飼料", Vector2{ foodBtn.x + 15, foodBtn.y + 5 }, 24, 2, BLACK);
+
+            //繪製名稱按鈕
+            DrawRectangleRec(renameBth, LIGHTGRAY);
+            DrawRectangleLinesEx(renameBth, 2, DARKGRAY); 
+            DrawTextEx(chineseFont, u8"改名", Vector2{ renameBth.x + 15, renameBth.y + 5 }, 24, 2, BLACK);
+
+
+            //在滑鼠位置繪製一顆飼料
+            if (isFoodActive){
+                DrawCircleV(mousePos , 10 , ORANGE);
+                //DrawTextEx(chineseFont,u8"他跟著你", Vector2{150 , 25},24,2 ,DARKGRAY);
+            }
+
+            EndDrawing();
+        }
+
+        //遊戲結束畫面
+        else if (currentState == STATE_GAMEOVER) {
+            
+            // 偵測是否按下 Enter 重新開始
+            if (IsKeyPressed(KEY_ENTER)) {
+                delete myPet; // 殺掉舊的寵物，釋放記憶體
+                myPet = new VirtualPet("寵物名", "pet.png", "pet_hurt.png", 300, 200); // 誕生一隻全新的寵物，背包狀態會自動重置！
+                
+                enemies.clear(); // 清空舊的敵人陣列
+                enemySpawnTimer = 0.0f;
+
+                currentState = STATE_NAMING; // 回到取名畫面重新開始
+                inputText = ""; 
+                isFoodActive = false;
+
+                hasUploaded = false;
+            }
+
+            BeginDrawing();
+            ClearBackground(RAYWHITE);
+
+            // 印出死亡訊息與最終存活時間
+            DrawTextEx(chineseFont, u8"遊戲結束 (GAME OVER)", Vector2{ 200, 200 }, 40, 2, RED);
+            
+            std::string finalTime = u8"最終存活時間: " + std::to_string(myPet->GetStats()->GetSurvivalTime()) + u8" 秒";
+            DrawTextEx(chineseFont, finalTime.c_str(), Vector2{ 200, 280 }, 32, 2, DARKGRAY);
+
+            DrawTextEx(chineseFont, u8"按 Enter 鍵重新開始", Vector2{ 200, 360 }, 32, 2, GRAY);
+
+            EndDrawing();
         }
         
     }
