@@ -1,12 +1,8 @@
-//視窗實作
+//視窗實作.
 
 #include "GameWindow.h"
 #include "raymath.h"
 
-// 🌐 為了串接雲端 API，補上這三行
-#define CPPHTTPLIB_OPENSSL_SUPPORT // 如果未來要支援 https 再開，目前一般 http 可不加
-#pragma comment(lib, "ws2_32.lib")  // 👈 Windows 專用：強制連結作業系統的網路庫
-#include <string>
 
 //視窗建構子實作
 GameWindow::GameWindow(int w,int h , const char* t){
