@@ -5,7 +5,6 @@
 
 // 🌐 為了串接雲端 API，補上這三行
 #define CPPHTTPLIB_OPENSSL_SUPPORT // 如果未來要支援 https 再開，目前一般 http 可不加
-#include "httplib.h"
 #pragma comment(lib, "ws2_32.lib")  // 👈 Windows 專用：強制連結作業系統的網路庫
 #include <string>
 
@@ -239,21 +238,9 @@ void GameWindow::Run(){
                     std::string playerName = myPet->GetName();
                     int survivalSec = myPet->GetStats()->GetSurvivalTime();
 
-                    // 1. 連線到你的 GCP 雲端主機（請把這裡的 IP 換成你 GCP 的外部 IP）
-                    httplib::Client cli("http://你的GCP外部IP:8080");
 
                     // 2. 把玩家名字與存活時間打包成簡單的 JSON 字串
                     std::string jsonBody = "{\"player\": \"" + playerName + "\", \"score\": " + std::to_string(survivalSec) + "}";
-
-                    // 3. 發送 POST 請求給雲端
-                    // 使用 try-catch 或者是條件判斷，防止因為沒連網導致遊戲當掉
-                    if (auto res = cli.Post("/api/sync", jsonBody, "application/json")) {
-                        if (res->status == 200) {
-                            std::cout << "雲端排行同步成功！" << std::endl;
-                        }
-                    } else {
-                        std::cout << "目前處於離線狀態，無法連接到雲端伺服器。" << std::endl;
-                    }
 
                     hasUploaded = true; // 鎖上開關，這一局不再重複上傳！
                 }
