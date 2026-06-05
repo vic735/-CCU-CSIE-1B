@@ -118,10 +118,21 @@ void VirtualPet::SetName(std::string newName) {
     name = newName;
 }
 
-void VirtualPet::Feed() {
-    stats.AddHunger(30.0f); // 吃到飼料，恢復 30 點飢餓
-    stats.AddMood(10.0f);   // 恢復 10 點心情
-    Speak(u8"好吃好吃！", 2.0f);
+void VirtualPet::Feed(int foodType) {
+    stats.EatSpecialFood(foodType);
+
+    if (foodType == 1) {
+        Speak(u8"爽啦！但肚子好空... (咳血)", 2.5f);
+    } 
+    else if (foodType == 2) {
+        Speak(u8"好飽！但這什麼地獄味道... (胃痛)", 2.5f);
+    } 
+    else if (foodType == 3) {
+        Speak(u8"傷口癒合了！但我覺得身體好虛...", 2.5f);
+    }
+    else if (foodType == 4) {
+        Speak(u8"好吃！嚼嚼嚼...", 1.5f);
+    }
 }
 
 PetStats* VirtualPet::GetStats() {

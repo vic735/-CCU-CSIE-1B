@@ -41,7 +41,7 @@ class VirtualPet{
     std::string GetName();
     void SetName(std::string newNAME);
 
-    void Feed();
+    void Feed(int foodType);
     PetStats* GetStats();
     float GetX();
     float GetY();
