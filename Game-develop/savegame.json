@@ -1,0 +1,13 @@
+{
+    "coins": 114,
+    "foodCount": 3,
+    "highScore": 58,
+    "hunger": 100.0,
+    "jellyCount": 1,
+    "jerkyCount": 1,
+    "maxHealth": 100.0,
+    "maxHunger": 100.0,
+    "maxMood": 100.0,
+    "mood": 100.0,
+    "pillCount": 1
+}
