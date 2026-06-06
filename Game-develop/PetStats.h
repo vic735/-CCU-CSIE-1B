@@ -77,4 +77,14 @@ class PetStats{
         void AddStock(int type, int amount);  // 商店購買時加庫存
         bool UseStock(int type);
 
+
+        void SetSurvivalTime(int t) { survivalTime = t; }
+        void SetCoins(int c) { coins = c; }
+        void SetHunger(float h) { hunger = h; }
+        void SetMood(float m) { mood = m; }
+        void SetHealth(float hp) { health = hp; }
+        void SetJellyCount(int c) { jellyCount = c; }
+        void SetJerkyCount(int c) { jerkyCount = c; }
+        void SetPillCount(int c) { pillCount = c; }
+
 };

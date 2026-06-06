@@ -17,7 +17,9 @@ enum GameState{
     STATE_PLAYING,
     STATE_GAMEOVER,
     STATE_SHOP,
-    STATE_UPGRADE_SHOP
+    STATE_UPGRADE_SHOP,
+    STATE_RAISING, //養成模式
+    STATE_RAISING_NAMING
 };
 
 // 敵人的資料結構
@@ -41,6 +43,7 @@ class GameWindow{
         Font chineseFont;
 
         VirtualPet* myPet;//用指標來持有寵物物件
+        VirtualPet* myRaisingPet;
 
         int activeFoodType; //手上是否有飼料
         Rectangle basicFoodBtn;
@@ -50,6 +53,7 @@ class GameWindow{
 
         Rectangle buyFoodBtn;   // 新增：買飼料按鈕 //商店的按鈕
         Rectangle closeShopBtn; // 離開商店的按鈕
+        GameState previousState;  //判斷當前位置
 
         Rectangle renameBth;      //名稱按鈕
         GameState currentState;   //目前的狀態
@@ -70,10 +74,15 @@ class GameWindow{
         
         Rectangle startMenuBtn;   
         Rectangle futureModeBtn;
+        Rectangle backToMenuBtn;
+
+        void SaveGame();
+        void LoadGame();
 
     public:
         GameWindow(int w, int h , const char* t);
         ~GameWindow();
 
         void Run();
+
 };

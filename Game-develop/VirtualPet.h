@@ -32,7 +32,7 @@ class VirtualPet{
 
     //行為方法
     void Update(); //邏輯更新
-    void Draw(Font font);  //畫面繪製
+    void Draw(Font font, bool enableGrowth = false);  //畫面繪製
 
     void SetTarget(Vector2 pos, bool follow); //提供介面讓外部設定跟隨狀態
     //Vector2 pos目標位置 包含x,y

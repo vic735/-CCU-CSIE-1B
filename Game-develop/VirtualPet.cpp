@@ -79,12 +79,20 @@ void VirtualPet::Update(){
 }
 
 //畫面實作
-void VirtualPet::Draw(Font font){
+void VirtualPet::Draw(Font font, bool enableGrowth){
+
+    float growthScale = 1.0f;
+    if (enableGrowth) {
+        growthScale = 1.0f + (stats.GetSurvivalTime() / 30.0f) * 0.1f;
+        if (growthScale > 2.5f) growthScale = 2.5f;
+    }
+    float finalScale = 0.2f * growthScale;
+
     // 1. 視覺差分：判斷要畫哪一張圖
     if (stats.GetHealth() < 30.0f || stats.GetHunger() < 30.0f) {
         DrawTextureEx(textureHurt, Vector2{x, y}, 0.0f, 0.2f, WHITE);
     } else {
-        DrawTextureEx(texture, Vector2{x, y}, 0.0f, 0.2f, WHITE);
+        DrawTextureEx(texture, Vector2{x, y}, 0.0f, finalScale, WHITE);
     }
 
     // 2. 畫出對白氣泡框
