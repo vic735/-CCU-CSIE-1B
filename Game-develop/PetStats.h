@@ -76,6 +76,5 @@ class PetStats{
         int GetPillCount();
         void AddStock(int type, int amount);  // 商店購買時加庫存
         bool UseStock(int type);
-        
 
 };
