@@ -12,6 +12,7 @@
 
 //命名定義 正式 與 遊玩
 enum GameState{
+    STATE_MENU,
     STATE_NAMING,
     STATE_PLAYING,
     STATE_GAMEOVER,
@@ -66,6 +67,9 @@ class GameWindow{
         RenderTexture2D targetCanvas;
 
         RewardManager* myReward;
+        
+        Rectangle startMenuBtn;   
+        Rectangle futureModeBtn;
 
     public:
         GameWindow(int w, int h , const char* t);

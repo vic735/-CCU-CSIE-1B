@@ -18,9 +18,13 @@ GameWindow::GameWindow(int w,int h , const char* t){
 
     renameBth = {610 , 20 , 100 , 40}; //名稱按鈕
 
+    //currentState = STATE_MENU; //選單畫面
+    startMenuBtn  = { 330, 220, 300, 80 }; 
+    futureModeBtn = { 330, 320, 300, 80 };
+
     hasUploaded = false;
 
-    currentState = STATE_NAMING; //初始化命名畫面
+    currentState = STATE_MENU; //初始化主畫面
     inputText = ""; //輸入文字，預設空白
     framesCounter = 0;
     enemySpawnTimer = 0.0f; //初始化敵人生出計時器
@@ -31,7 +35,7 @@ GameWindow::GameWindow(int w,int h , const char* t){
     SetTargetFPS(60); //固定幀數 應該吧
 
     //載入中文
-    const char* dictionary = u8"爽啦！但肚子好空... (咳血) 好飽！但這什麼礎地獄味道... (胃痛)傷口癒合了！但我覺得身體好虛...好吃！嚼嚼嚼...魔極樂果凍肉乾精全滿飽食本煉大補丸包打開或 的按 U 鍵 進入基因研究院永久升級永久當前生命上限:改造生命 (+20) 消耗$100飼料寵物正在跟著你！是一隻，我叫飼料庫存做請為取個名字：按鍵確認Ente擁有金幣包r大雞雞波波改打離開研究院永久升級最大基因能力改造消耗點返回並重開局按鍵進入名輸入英文數飢餓度心歷史最高紀錄情值存活時間秒血量遊戲結束重新開始最終今天天氣真好想散步你在看我嗎好吃我快不行了痛點擊賺錢買商店離開購買黃金飼料";
+    const char* dictionary = u8"爽啦！但肚子好空... (咳血) 好飽！但這什麼礎地獄味道.=== 電子開新模式 (未開放)始遊戲雞世界 ===.. (胃痛)傷口癒合了！但我覺得身體好虛...好吃！嚼嚼嚼...魔極樂果凍肉乾精全滿飽食本煉大補丸包打開或 的按 U 鍵 進入基因研究院永久升級永久當前生命上限:改造生命 (+20) 消耗$100飼料寵物正在跟著你！是一隻，我叫飼料庫存做請為取個名字：按鍵確認Ente擁有金幣包r大雞雞波波改打離開研究院永久升級最大基因能力改造消耗點返回並重開局按鍵進入名輸入英文數飢餓度心歷史最高紀錄情值存活時間秒血量遊戲結束重新開始最終今天天氣真好想散步你在看我嗎好吃我快不行了痛點擊賺錢買商店離開購買黃金飼料";
 
     int codepointCount = 0;
     int *codepoints = LoadCodepoints(dictionary, &codepointCount);
@@ -50,7 +54,7 @@ GameWindow::GameWindow(int w,int h , const char* t){
 
 
     // 精準載入字典裡有出現的字
-    chineseFont = LoadFontEx("GenSenRounded2TW-B.otf", 32, allCodepoints, count);
+    chineseFont = LoadFontEx("GenSenRounded2TW-B.otf",128, allCodepoints, count);
     
     // 釋放名單記憶體
     UnloadCodepoints(codepoints);
@@ -120,7 +124,27 @@ void GameWindow::Run(){
         BeginTextureMode(targetCanvas); 
         ClearBackground(RAYWHITE);
 
-        if(currentState == STATE_NAMING){  //命名功能
+
+        if (currentState == STATE_MENU) {  //主選單
+
+            if (CheckCollisionPointRec(mousePos, startMenuBtn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                currentState = STATE_NAMING;
+            }
+            
+            DrawTextEx(chineseFont, u8"=== 電子雞世界 ===", Vector2{ 210, 100 }, 54, 2, GOLD);
+
+            // 繪製「開始遊戲」按鈕
+            DrawRectangleRec(startMenuBtn, SKYBLUE);
+            DrawRectangleLinesEx(startMenuBtn, 2, BLACK);
+            DrawTextEx(chineseFont, u8"開始遊戲", Vector2{ startMenuBtn.x + 60, startMenuBtn.y + 20 }, 44, 1, LIGHTGRAY);
+
+            // 預留的「新模式」灰色按鈕
+            DrawRectangleRec(futureModeBtn, GRAY);
+            DrawRectangleLinesEx(futureModeBtn, 2, DARKGRAY);
+            DrawTextEx(chineseFont, u8"新模式 (未開放)", Vector2{ futureModeBtn.x + 20, futureModeBtn.y + 20 }, 35, 1, LIGHTGRAY);
+        }
+
+        else if(currentState == STATE_NAMING){  //命名功能
 
                 int key = GetCharPressed(); //抓取玩家按下的案件的編碼
 
