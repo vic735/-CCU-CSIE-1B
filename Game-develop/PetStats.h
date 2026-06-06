@@ -55,6 +55,7 @@ class PetStats{
         // 擴充：JSON 存取檔
         void SaveSettings();      // 儲存至存檔
         void LoadSettings();      // 讀取存檔
+        void AddCoins(int amount);
 
         void Reset();
 

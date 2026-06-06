@@ -68,6 +68,7 @@ GameWindow::GameWindow(int w,int h , const char* t){
     targetCanvas = LoadRenderTexture(960, 540);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTextureFilter(targetCanvas.texture, TEXTURE_FILTER_BILINEAR);
+    myReward = new RewardManager(2);
 
 }
 
@@ -81,6 +82,7 @@ GameWindow::~GameWindow(){
     delete myShop;
     delete myUpgradeShop;
     UnloadRenderTexture(targetCanvas);
+    delete myReward;
 }
 
 void GameWindow::Run(){
@@ -331,12 +333,16 @@ void GameWindow::Run(){
                             currentState = STATE_GAMEOVER;
 
                             if (!hasUploaded) {
-                    std::string playerName = myPet->GetName();
-                    int survivalSec = myPet->GetStats()->GetSurvivalTime();
+                                std::string playerName = myPet->GetName();
+                                int survivalSec = myPet->GetStats()->GetSurvivalTime();
+
+                                int rewardCoins = myReward->CalculateEarnedCoins(survivalSec);
+                                myPet->GetStats()->AddCoins(rewardCoins);
+                                myReward->SaveSettlementJson("data.json", playerName, survivalSec, myPet->GetStats()->GetCoins());
+                                hasUploaded = true;
 
 
                     // 2. 把玩家名字與存活時間打包成簡單的 JSON 字串
-                    std::string jsonBody = "{\"player\": \"" + playerName + "\", \"score\": " + std::to_string(survivalSec) + "}";
 
                     hasUploaded = true; // 鎖上開關，這一局不再重複上傳！
                 }

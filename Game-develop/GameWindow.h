@@ -7,6 +7,7 @@
 #include <vector> //動態函式庫用來記錄敵人
 #include "Shop.h"
 #include "UpgradeShop.h"
+#include "RewardManager.h"
 
 
 //命名定義 正式 與 遊玩
@@ -63,6 +64,8 @@ class GameWindow{
         UpgradeShop* myUpgradeShop;
 
         RenderTexture2D targetCanvas;
+
+        RewardManager* myReward;
 
     public:
         GameWindow(int w, int h , const char* t);

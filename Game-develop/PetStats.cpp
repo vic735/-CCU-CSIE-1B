@@ -280,3 +280,6 @@ bool PetStats::UseStock(int type) {
     if (type == 3 && pillCount > 0) { pillCount--; SaveSettings(); return true; }
     return false;
 }
+void PetStats::AddCoins(int amount) {
+    coins += amount; 
+}
