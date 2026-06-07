@@ -45,6 +45,6 @@
 # 程式如何安裝執行：
 ### * 下載專案原始碼 `ZIP` 檔。
 ### * 解壓縮 `ZIP` 檔案。
-### * 點擊開啟 `Game-develop` 。
+### * 點擊開啟 `Game-develop`資料夾 。
 ### * 初次使用時請確保 `data.json` 與 `savegame.json` 已經刪除，如果沒有請手動刪除
 ### * 點擊 `game.exe` 啟動遊戲 。
